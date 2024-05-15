@@ -1,2 +1,127 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+class TicTacToe:
+    def __init__(self):
+        # Initialize a 3x3 board as a list of empty spaces
+        self.board = [' ' for _ in range(9)]
+        self.current_winner = None  # No winner yet
+
+    def print_board(self):
+        # Print the current state of the board
+        for row in [self.board[i*3:(i+1)*3] for i in range(3)]:
+            print('| ' + ' | '.join(row) + ' |')
+
+    @staticmethod
+    def print_board_nums():
+        # Print the board with numbers to indicate positions
+        number_board = [[str(i) for i in range(j*3, (j+1)*3)] for j in range(3)]
+        for row in number_board:
+            print('| ' + ' | '.join(row) + ' |')
+
+    def available_moves(self):
+        # Return a list of available moves (indices of empty spaces)
+        return [i for i, spot in enumerate(self.board) if spot == ' ']
+
+    def empty_squares(self):
+        # Check if there are any empty squares
+        return ' ' in self.board
+
+    def num_empty_squares(self):
+        # Return the number of empty squares
+        return self.board.count(' ')
+
+    def make_move(self, square, letter):
+        # Make a move if the square is empty
+        if self.board[square] == ' ':
+            self.board[square] = letter
+            # Check if this move wins the game
+            if self.winner(square, letter):
+                self.current_winner = letter
+            return True
+        return False
+
+    def winner(self, square, letter):
+        # Check if there is a winner after a move
+        row_ind = square // 3
+        row = self.board[row_ind*3:(row_ind+1)*3]
+        if all([spot == letter for spot in row]):
+            return True
+
+        col_ind = square % 3
+        column = [self.board[col_ind+i*3] for i in range(3)]
+        if all([spot == letter for spot in column]):
+            return True
+
+        # Check diagonals
+        if square % 2 == 0:
+            diagonal1 = [self.board[i] for i in [0, 4, 8]]
+            if all([spot == letter for spot in diagonal1]):
+                return True
+            diagonal2 = [self.board[i] for i in [2, 4, 6]]
+            if all([spot == letter for spot in diagonal2]):
+                return True
+
+        return False
+
+
+def play(game, x_player, o_player, print_game=True):
+    # Function to manage the game flow
+    if print_game:
+        game.print_board_nums()  # Print the board with positions
+
+    letter = 'X'  # Starting letter
+    while game.empty_squares():
+        # Get the move from the current player
+        if letter == 'O':
+            square = o_player.get_move(game)
+        else:
+            square = x_player.get_move(game)
+
+        # Make the move
+        if game.make_move(square, letter):
+            if print_game:
+                print(f'{letter} makes a move to square {square}')
+                game.print_board()
+                print('')
+
+            # Check for a winner
+            if game.current_winner:
+                if print_game:
+                    print(letter + ' wins!')
+                return letter  # End the game
+
+            # Switch turns
+            letter = 'O' if letter == 'X' else 'X'
+
+        # Small delay for better user experience
+        time.sleep(0.8)
+
+    if print_game:
+        print('It\'s a tie!')
+
+
+class HumanPlayer:
+    def __init__(self, letter):
+        # Initialize player with their letter (X or O)
+        self.letter = letter
+
+    def get_move(self, game):
+        # Get a valid move from the player
+        valid_square = False
+        val = None
+        while not valid_square:
+            square = input(self.letter + '\'s turn. Input move (0-8): ')
+            try:
+                val = int(square)
+                if val not in game.available_moves():
+                    raise ValueError
+                valid_square = True
+            except ValueError:
+                print('Invalid square. Try again.')
+        return val
+
+
+if __name__ == '__main__':
+    import time  # Importing time for delay between moves
+    x_player = HumanPlayer('X')
+    o_player = HumanPlayer('O')
+    t = TicTacToe()
+    play(t, x_player, o_player, print_game=True)
